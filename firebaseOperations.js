@@ -1,53 +1,57 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
+const { initializeApp } = require("firebase/app");
 const {
-  initFirebaseAndSetListeners,
-  addMessage,
-  clearMessages,
-} = require("./firebaseOperations");
+  getDatabase,
+  ref,
+  set,
+  push,
+  onValue,
+  remove,
+} = require("firebase/database");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const firebaseConfig = {
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+};
 
-const PORT = process.env.PORT || 5000;
+// Initialize Firebase app
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
-app.get("/api-key", (req, res) => {
-  res.json({ apiKey: process.env.GOOGLE_API_KEY });
-});
+const initFirebaseAndSetListeners = () => {
+  const messagesRef = ref(database, "messages");
+  onValue(messagesRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log("Messages:", data);
+  });
+  const intervalId = setInterval(() => {
+    console.log("Clearing messages every 24 hours");
+    remove(messagesRef);
+  }, 24 * 60 * 60 * 1000);
 
-app.get("/initialize-firebase", async (req, res) => {
-  try {
-    const { database, messagesRef, intervalId } =
-      await initFirebaseAndSetListeners();
-    res.json({ database, messagesRef, intervalId });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to initialize Firebase" });
-  }
-});
+  return { database, messagesRef, intervalId };
+};
 
-app.post("/add-message", async (req, res) => {
-  try {
-    const { message } = req.body;
-    await addMessage(message); // Assuming addMessage function is updated to take only message
-    res.status(200).json({ message: "Message added successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to add message" });
-  }
-});
+const addMessage = async (message) => {
+  const messagesRef = ref(database, "messages");
+  const newMessageRef = push(messagesRef); // Use push to create a new unique key
+  await set(newMessageRef, {
+    text: message,
+    timestamp: new Date().toLocaleString(),
+  });
+};
 
-app.post("/clear-messages", async (req, res) => {
-  try {
-    await clearMessages();
-    res.status(200).json({ message: "Messages cleared successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to clear messages" });
-  }
-});
+const clearMessages = async () => {
+  const messagesRef = ref(database, "messages");
+  await remove(messagesRef);
+};
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+module.exports = { initFirebaseAndSetListeners, addMessage, clearMessages };
