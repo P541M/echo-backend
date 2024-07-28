@@ -7,6 +7,7 @@ const {
   onValue,
   remove,
   get,
+  update,
 } = require("firebase/database");
 const dotenv = require("dotenv");
 
@@ -40,13 +41,24 @@ const addMessage = async (message) => {
   await set(newMessageRef, {
     text: message,
     timestamp: new Date().toLocaleString(),
+    likes: 0,
+    likedBy: [],
   });
 };
 
 const getMessages = async () => {
   const messagesRef = ref(database, "messages");
   const snapshot = await get(messagesRef);
-  return snapshot.val();
+  const messages = snapshot.val();
+
+  // Ensure likedBy property is defined
+  for (const key in messages) {
+    if (!messages[key].likedBy) {
+      messages[key].likedBy = [];
+    }
+  }
+
+  return messages;
 };
 
 const clearMessages = async () => {
@@ -54,9 +66,31 @@ const clearMessages = async () => {
   await remove(messagesRef);
 };
 
+const likeMessage = async (messageId, userId) => {
+  const messageRef = ref(database, `messages/${messageId}`);
+  const snapshot = await get(messageRef);
+  const messageData = snapshot.val();
+  if (messageData.likedBy.includes(userId)) {
+    // Unlike the message
+    const updates = {
+      likes: messageData.likes - 1,
+      likedBy: messageData.likedBy.filter((id) => id !== userId),
+    };
+    await update(messageRef, updates);
+  } else {
+    // Like the message
+    const updates = {
+      likes: messageData.likes + 1,
+      likedBy: [...messageData.likedBy, userId],
+    };
+    await update(messageRef, updates);
+  }
+};
+
 module.exports = {
   initFirebaseAndSetListeners,
   addMessage,
   clearMessages,
   getMessages,
+  likeMessage,
 };

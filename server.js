@@ -7,6 +7,7 @@ const {
   addMessage,
   clearMessages,
   getMessages,
+  likeMessage,
 } = require("./firebaseOperations");
 
 dotenv.config();
@@ -58,6 +59,19 @@ app.post("/clear-messages", async (req, res) => {
     res.status(200).json({ message: "Messages cleared successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to clear messages" });
+  }
+});
+
+app.post("/like-message", async (req, res) => {
+  try {
+    const { messageId, userId } = req.body;
+    await likeMessage(messageId, userId);
+    res.status(200).json({ message: "Message liked/unliked successfully" });
+  } catch (error) {
+    console.error("Error in /like-message:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to like/unlike message", details: error.message });
   }
 });
 
