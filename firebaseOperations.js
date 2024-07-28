@@ -6,6 +6,7 @@ const {
   push,
   onValue,
   remove,
+  get, // Add this import
 } = require("firebase/database");
 const dotenv = require("dotenv");
 
@@ -47,9 +48,20 @@ const addMessage = async (message) => {
   });
 };
 
+const getMessages = async () => {
+  const messagesRef = ref(database, "messages");
+  const snapshot = await get(messagesRef);
+  return snapshot.val();
+};
+
 const clearMessages = async () => {
   const messagesRef = ref(database, "messages");
   await remove(messagesRef);
 };
 
-module.exports = { initFirebaseAndSetListeners, addMessage, clearMessages };
+module.exports = {
+  initFirebaseAndSetListeners,
+  addMessage,
+  clearMessages,
+  getMessages,
+};

@@ -5,6 +5,7 @@ const {
   initFirebaseAndSetListeners,
   addMessage,
   clearMessages,
+  getMessages, // Add this import
 } = require("./firebaseOperations");
 
 dotenv.config();
@@ -23,6 +24,18 @@ app.get("/initialize-firebase", async (req, res) => {
     firebaseInitialized = true;
   }
   res.json({ message: "Firebase initialized successfully" });
+});
+
+app.get("/messages", async (req, res) => {
+  try {
+    const messages = await getMessages(); // Add this to get messages
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error("Error in /messages:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch messages", details: error.message });
+  }
 });
 
 app.post("/add-message", async (req, res) => {
