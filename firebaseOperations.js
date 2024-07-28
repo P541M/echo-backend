@@ -34,9 +34,11 @@ const initFirebaseAndSetListeners = () => {
     console.log("Messages:", data);
   });
   const intervalId = setInterval(() => {
-    console.log("Clearing messages every 24 hours");
+    console.log("Clearing messages every 10 seconds");
     remove(messagesRef);
-  }, 24 * 60 * 60 * 1000);
+  }, 10 * 1000); // 10 seconds
+
+  return { database, messagesRef, intervalId }; // Return the intervalId for future reference
 };
 
 const addMessage = async (message) => {
