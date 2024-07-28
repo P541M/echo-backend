@@ -49,9 +49,8 @@ const addMessage = async (message) => {
 const getMessages = async () => {
   const messagesRef = ref(database, "messages");
   const snapshot = await get(messagesRef);
-  const messages = snapshot.val();
+  const messages = snapshot.val() || {};
 
-  // Ensure likedBy property is defined
   for (const key in messages) {
     if (!messages[key].likedBy) {
       messages[key].likedBy = [];
@@ -69,7 +68,12 @@ const clearMessages = async () => {
 const likeMessage = async (messageId, userId) => {
   const messageRef = ref(database, `messages/${messageId}`);
   const snapshot = await get(messageRef);
-  const messageData = snapshot.val();
+  const messageData = snapshot.val() || {};
+
+  if (!messageData.likedBy) {
+    messageData.likedBy = [];
+  }
+
   if (messageData.likedBy.includes(userId)) {
     // Unlike the message
     const updates = {
