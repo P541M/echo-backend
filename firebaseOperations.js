@@ -6,7 +6,7 @@ const {
   push,
   onValue,
   remove,
-  get, // Add this import
+  get,
 } = require("firebase/database");
 const dotenv = require("dotenv");
 
@@ -23,7 +23,6 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
@@ -33,12 +32,6 @@ const initFirebaseAndSetListeners = () => {
     const data = snapshot.val();
     console.log("Messages:", data);
   });
-  const intervalId = setInterval(() => {
-    console.log("Clearing messages every 10 seconds");
-    remove(messagesRef);
-  }, 10 * 1000); // 10 seconds
-
-  return { database, messagesRef, intervalId }; // Return the intervalId for future reference
 };
 
 const addMessage = async (message) => {

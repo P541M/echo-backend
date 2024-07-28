@@ -1,11 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const cron = require("node-cron");
 const {
   initFirebaseAndSetListeners,
   addMessage,
   clearMessages,
-  getMessages, // Add this import
+  getMessages,
 } = require("./firebaseOperations");
 
 dotenv.config();
@@ -28,7 +29,7 @@ app.get("/initialize-firebase", async (req, res) => {
 
 app.get("/messages", async (req, res) => {
   try {
-    const messages = await getMessages(); // Add this to get messages
+    const messages = await getMessages();
     res.status(200).json(messages);
   } catch (error) {
     console.error("Error in /messages:", error);
@@ -59,6 +60,24 @@ app.post("/clear-messages", async (req, res) => {
     res.status(500).json({ error: "Failed to clear messages" });
   }
 });
+
+// Schedule clearing messages at midnight ET
+cron.schedule(
+  "0 0 * * *",
+  async () => {
+    const now = new Date();
+    const estOffset = 5 * 60 * 60 * 1000; // Offset for Eastern Standard Time (EST)
+    const midnightET = new Date(now.setUTCHours(0, 0, 0, 0) + estOffset);
+
+    if (now.getTime() === midnightET.getTime()) {
+      console.log("Clearing messages at midnight ET");
+      await clearMessages();
+    }
+  },
+  {
+    timezone: "America/New_York",
+  }
+);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
