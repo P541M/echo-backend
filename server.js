@@ -16,14 +16,10 @@ app.use(express.json());
 const PORT = process.env.PORT || 5000;
 
 let firebaseInitialized = false;
-let database, messagesRef, intervalId;
 
 app.get("/initialize-firebase", async (req, res) => {
   if (!firebaseInitialized) {
-    const firebaseInit = initFirebaseAndSetListeners();
-    database = firebaseInit.database;
-    messagesRef = firebaseInit.messagesRef;
-    intervalId = firebaseInit.intervalId;
+    initFirebaseAndSetListeners();
     firebaseInitialized = true;
   }
   res.json({ message: "Firebase initialized successfully" });

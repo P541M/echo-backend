@@ -36,13 +36,11 @@ const initFirebaseAndSetListeners = () => {
     console.log("Clearing messages every 24 hours");
     remove(messagesRef);
   }, 24 * 60 * 60 * 1000);
-
-  return { database, messagesRef, intervalId };
 };
 
 const addMessage = async (message) => {
   const messagesRef = ref(database, "messages");
-  const newMessageRef = push(messagesRef); // Use push to create a new unique key
+  const newMessageRef = push(messagesRef);
   await set(newMessageRef, {
     text: message,
     timestamp: new Date().toLocaleString(),
