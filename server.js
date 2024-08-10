@@ -8,6 +8,7 @@ const {
   clearMessages,
   getMessages,
   likeMessage,
+  muffleMessage,
 } = require("./firebaseOperations");
 
 dotenv.config();
@@ -95,4 +96,17 @@ cron.schedule(
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+app.post("/muffle-message", async (req, res) => {
+  try {
+    const { messageId, userId } = req.body;
+    await muffleMessage(messageId, userId);
+    res.status(200).json({ message: "Message muffled successfully" });
+  } catch (error) {
+    console.error("Error in /muffle-message:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to muffle message", details: error.message });
+  }
 });

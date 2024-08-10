@@ -43,6 +43,8 @@ const addMessage = async (message) => {
     timestamp: new Date().toLocaleString(),
     likes: 0,
     likedBy: [],
+    muffles: 0, // Initialize muffles count
+    muffledBy: [], // Initialize muffledBy array
   });
 };
 
@@ -54,6 +56,9 @@ const getMessages = async () => {
   for (const key in messages) {
     if (!messages[key].likedBy) {
       messages[key].likedBy = [];
+    }
+    if (!messages[key].muffledBy) {
+      messages[key].muffledBy = [];
     }
   }
 
@@ -91,10 +96,38 @@ const likeMessage = async (messageId, userId) => {
   }
 };
 
+const muffleMessage = async (messageId, userId) => {
+  const messageRef = ref(database, `messages/${messageId}`);
+  const snapshot = await get(messageRef);
+  const messageData = snapshot.val() || {};
+
+  // Ensure muffledBy is an array
+  if (!Array.isArray(messageData.muffledBy)) {
+    messageData.muffledBy = [];
+  }
+
+  if (messageData.muffledBy.includes(userId)) {
+    // Un-muffle the message
+    const updates = {
+      muffles: messageData.muffles - 1,
+      muffledBy: messageData.muffledBy.filter((id) => id !== userId),
+    };
+    await update(messageRef, updates);
+  } else {
+    // Muffle the message
+    const updates = {
+      muffles: (messageData.muffles || 0) + 1,
+      muffledBy: [...messageData.muffledBy, userId],
+    };
+    await update(messageRef, updates);
+  }
+};
+
 module.exports = {
   initFirebaseAndSetListeners,
   addMessage,
   clearMessages,
   getMessages,
   likeMessage,
+  muffleMessage,
 };
