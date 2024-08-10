@@ -40,7 +40,7 @@ const addMessage = async (message) => {
   const newMessageRef = push(messagesRef);
   await set(newMessageRef, {
     text: message,
-    timestamp: new Date().toLocaleString(),
+    timestamp: new Date().toISOString(), // Use ISO 8601 format for timestamp
     likes: 0,
     likedBy: [],
     muffles: 0, // Initialize muffles count
